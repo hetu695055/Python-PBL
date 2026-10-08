@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Submission & Performance Analytics</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for lightweight visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand" onclick="navigateToStudentsList()">
+                <div class="brand-icon">🎓</div>
+                <div class="brand-text">
+                    <h1>Student Submission & Analytics</h1>
+                    <span class="subtitle">Academic Monitoring & Internal Evaluation System</span>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <button class="nav-btn" onclick="navigateToStudentsList()" id="btn-nav-overview">
+                    👥 Students Directory
+                </button>
+                <div class="nav-badge" id="class-rate-badge">
+                    Class Submission Rate: <strong>--%</strong>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="main-container">
+
+        <!-- ============================================================ -->
+        <!-- VIEW 1: STUDENTS LIST & CLASS OVERVIEW                       -->
+        <!-- ============================================================ -->
+        <section id="view-students-list" class="view-section active">
+
+            <!-- Class Top KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card card-blue">
+                    <div class="kpi-icon">👥</div>
+                    <div class="kpi-info">
+                        <span class="kpi-label">Total Students</span>
+                        <h2 class="kpi-value" id="kpi-total-students">--</h2>
+                        <span class="kpi-sub">Active Enrollments</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card card-green">
+                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-info">
+                        <span class="kpi-label">Submission Rate</span>
+                        <h2 class="kpi-value" id="kpi-submission-rate">--%</h2>
+                        <span class="kpi-sub">Overall Completed</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card card-red">
+                    <div class="kpi-icon">⏳</div>
+                    <div class="kpi-info">
+                        <span class="kpi-label">Pending Submissions</span>
+                        <h2 class="kpi-value" id="kpi-pending-count">--</h2>
+                        <span class="kpi-sub">Awaiting Turn-in</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card card-orange">
+                    <div class="kpi-icon">⚠</div>
+                    <div class="kpi-info">
+                        <span class="kpi-label">Late Submissions</span>
+                        <h2 class="kpi-value" id="kpi-late-count">--</h2>
+                        <span class="kpi-sub">Past Deadline</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card card-alert">
+                    <div class="kpi-icon">🚨</div>
+                    <div class="kpi-info">
+                        <span class="kpi-label">Attendance &lt; 75%</span>
+                        <h2 class="kpi-value" id="kpi-below-75">--</h2>
+                        <span class="kpi-sub">Shortage Risk</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Analytics Accordion / Grid -->
+            <div class="charts-section card">
+                <div class="section-header">
+                    <div>
+                        <h3>Visual Performance Analytics</h3>
+                        <p class="section-desc">Class-wide submission distribution, subject completion, and attendance benchmark</p>
+                    </div>
+                    <button class="btn-secondary btn-sm" onclick="toggleCharts()">
+                        <span id="charts-toggle-text">Hide Charts ▲</span>
+                    </button>
+                </div>
+
+                <div class="charts-grid" id="charts-wrapper">
+                    <div class="chart-box">
+                        <h4>Submission Status Breakdown</h4>
+                        <div class="canvas-container">
+                            <canvas id="chart-submission-status"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-box">
+                        <h4>Subject-wise Submission Rate</h4>
+                        <div class="canvas-container">
+                            <canvas id="chart-subject-rate"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-box chart-wide">
+                        <h4>Student Attendance vs 75% Mandatory Criterion</h4>
+                        <div class="canvas-container">
+                            <canvas id="chart-attendance"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-box chart-wide">
+                        <h4>Internal Marks Distribution (Scale of 30)</h4>
+                        <div class="canvas-container">
+                            <canvas id="chart-internal-marks"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students Directory Table Card -->
+            <div class="table-card card">
+                <div class="table-header">
+                    <div class="table-title">
+                        <h3>Students Directory</h3>
+                        <p class="section-desc">Click on any student to open their detailed submissions, attendance, and internal marks</p>
+                    </div>
+
+                    <div class="table-search">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="student-search-input" placeholder="Search by name or enrollment ID..." onkeyup="filterStudentsTable()">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table" id="table-students-list">
+                        <thead>
+                            <tr>
+                                <th>Enrollment</th>
+                                <th>Student Name</th>
+                                <th>Submission %</th>
+                                <th>Attendance %</th>
+                                <th>Attendance Status</th>
+                                <th>Internal /30</th>
+                                <th class="text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-table-body">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- VIEW 2: SPECIFIC STUDENT DETAILS & SUBPARTS                 -->
+        <!-- ============================================================ -->
+        <section id="view-student-details" class="view-section">
+
+            <!-- Breadcrumb Navigation Bar -->
+            <div class="student-nav-bar">
+                <div class="breadcrumb">
+                    <a href="javascript:void(0)" onclick="navigateToStudentsList()">← Back to Students Directory</a>
+                    <span class="bc-separator">/</span>
+                    <span class="bc-current" id="bc-student-name">Student Details</span>
+                </div>
+
+                <!-- Quick Switcher Dropdown -->
+                <div class="student-switcher">
+                    <label for="select-student-quick">Switch Student:</label>
+                    <select id="select-student-quick" onchange="loadStudent(this.value)">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Student Profile Header Card -->
+            <div class="profile-card card">
+                <div class="profile-left">
+                    <div class="profile-avatar" id="student-avatar-initials">AS</div>
+                    <div class="profile-meta">
+                        <h2 id="student-detail-name">Aarav Sharma</h2>
+                        <span class="enrollment-tag" id="student-detail-enrollment">Enrollment: 23AI001</span>
+                    </div>
+                </div>
+
+                <div class="profile-right">
+                    <div id="student-att-pill" class="status-pill pill-eligible">
+                        ✓ Attendance Eligible (91.2%)
+                    </div>
+                    <div class="profile-avg-marks">
+                        <span class="lbl">Avg Internal (/30):</span>
+                        <strong id="student-detail-internal">26.5 / 30</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Specific KPIs Row -->
+            <div class="student-kpi-row">
+                <div class="mini-kpi">
+                    <span class="label">Total Assigned</span>
+                    <strong id="st-kpi-total">8</strong>
+                </div>
+                <div class="mini-kpi text-green">
+                    <span class="label">Submitted</span>
+                    <strong id="st-kpi-submitted">8</strong>
+                </div>
+                <div class="mini-kpi text-red">
+                    <span class="label">Pending</span>
+                    <strong id="st-kpi-pending">0</strong>
+                </div>
+                <div class="mini-kpi text-orange">
+                    <span class="label">Late</span>
+                    <strong id="st-kpi-late">0</strong>
+                </div>
+                <div class="mini-kpi text-blue">
+                    <span class="label">Submission %</span>
+                    <strong id="st-kpi-rate">100%</strong>
+                </div>
+            </div>
+
+            <!-- SUBPART NAVIGATION LINKS -->
+            <div class="subpart-nav">
+                <button class="subpart-tab-link active" onclick="switchSubpart('submissions')" id="tab-link-submissions">
+                    📑 Subpart 1: Assignment Submissions
+                </button>
+                <button class="subpart-tab-link" onclick="switchSubpart('attendance')" id="tab-link-attendance">
+                    📅 Subpart 2: Attendance & 75% Rule
+                </button>
+                <button class="subpart-tab-link" onclick="switchSubpart('marks')" id="tab-link-marks">
+                    🎯 Subpart 3: Internal Marks (/30 Scale)
+                </button>
+            </div>
+
+            <!-- -------------------------------------------------------- -->
+            <!-- SUBPART 1: ASSIGNMENT SUBMISSIONS                        -->
+            <!-- -------------------------------------------------------- -->
+            <div id="subpart-submissions" class="subpart-content active card">
+                <div class="subpart-header">
+                    <div>
+                        <h3>Subpart 1: Assignment Submissions Record</h3>
+                        <p class="section-desc">Complete tracking of student's assignment completion and deadlines</p>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Assignment Name</th>
+                                <th>Due Date</th>
+                                <th>Submitted Date</th>
+                                <th>Current Status</th>
+                                <th>Update Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-submissions-tbody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- -------------------------------------------------------- -->
+            <!-- SUBPART 2: ATTENDANCE & 75% CRITERION                    -->
+            <!-- -------------------------------------------------------- -->
+            <div id="subpart-attendance" class="subpart-content card">
+                <div class="subpart-header">
+                    <div>
+                        <h3>Subpart 2: Attendance Monitoring & 75% Criterion</h3>
+                        <p class="section-desc">College regulation requires minimum 75% attendance to qualify for examinations</p>
+                    </div>
+                </div>
+
+                <!-- Prominent Criterion Alert Banner -->
+                <div id="attendance-criterion-banner" class="criterion-banner banner-eligible">
+                    <div class="banner-icon" id="criterion-icon">✓</div>
+                    <div class="banner-body">
+                        <h4 id="criterion-heading">ATTENDANCE ELIGIBLE: 88.5%</h4>
+                        <p id="criterion-desc">Student meets or exceeds the mandatory 75% attendance threshold.</p>
+                    </div>
+                </div>
+
+                <!-- Subject-wise Attendance Table -->
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Total Lectures</th>
+                                <th>Attended Lectures</th>
+                                <th>Attendance %</th>
+                                <th>Eligibility Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-attendance-tbody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Update Attendance Quick Form -->
+                <div class="inline-form-box">
+                    <h4>Edit Attendance Record</h4>
+                    <form id="form-update-attendance" onsubmit="handleAttendanceSubmit(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <select id="att-edit-subject" required>
+                                    <option value="Python Programming">Python Programming</option>
+                                    <option value="Data Structures">Data Structures</option>
+                                    <option value="Database Systems">Database Systems</option>
+                                    <option value="Computer Networks">Computer Networks</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Total Lectures</label>
+                                <input type="number" id="att-edit-total" min="1" max="100" value="40" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Attended Lectures</label>
+                                <input type="number" id="att-edit-attended" min="0" max="100" value="35" required>
+                            </div>
+                            <div class="form-group btn-align">
+                                <button type="submit" class="btn-primary">Save Attendance</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- -------------------------------------------------------- -->
+            <!-- SUBPART 3: INTERNAL MARKS (/30 SCALE)                    -->
+            <!-- -------------------------------------------------------- -->
+            <div id="subpart-marks" class="subpart-content card">
+                <div class="subpart-header">
+                    <div>
+                        <h3>Subpart 3: Internal Evaluation (/30 Scale)</h3>
+                        <p class="section-desc">Evaluation Scheme: Mid Semester (/50) + Assignment (/30) + Viva (/20) = /100 ➔ Converted to /30</p>
+                    </div>
+                </div>
+
+                <!-- Formula Highlight Box -->
+                <div class="formula-box">
+                    <div class="formula-title">Internal Marks Conversion Formula:</div>
+                    <code>Internal Marks (/30) = (Mid Sem /50 + Assignment /30 + Viva /20) / 100 × 30</code>
+                </div>
+
+                <!-- Subject-wise Marks Table -->
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Mid Semester (/50)</th>
+                                <th>Assignment (/30)</th>
+                                <th>Viva Voce (/20)</th>
+                                <th>Total (/100)</th>
+                                <th>Converted Internal (/30)</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-marks-tbody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Update Marks Quick Form -->
+                <div class="inline-form-box">
+                    <h4>Edit Subject Internal Marks</h4>
+                    <form id="form-update-marks" onsubmit="handleMarksSubmit(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <select id="marks-edit-subject" required>
+                                    <option value="Python Programming">Python Programming</option>
+                                    <option value="Data Structures">Data Structures</option>
+                                    <option value="Database Systems">Database Systems</option>
+                                    <option value="Computer Networks">Computer Networks</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Mid Sem (/50)</label>
+                                <input type="number" id="marks-edit-mid" min="0" max="50" step="0.5" value="40" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Assignment (/30)</label>
+                                <input type="number" id="marks-edit-assign" min="0" max="30" step="0.5" value="25" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Viva (/20)</label>
+                                <input type="number" id="marks-edit-viva" min="0" max="20" step="0.5" value="15" required>
+                            </div>
+                            <div class="form-group btn-align">
+                                <button type="submit" class="btn-primary">Save Marks</button>
+                            </div>
+                        </div>
+                        <div class="form-preview" id="marks-live-preview">
+                            Preview: Total: 80 / 100 ➔ Converted Internal: 24.0 / 30
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p>Student Submission & Performance Analytics • Built with Python, Flask, Pandas & Vanilla JS • In-Memory Architecture</p>
+    </footer>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">Record updated successfully</div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
